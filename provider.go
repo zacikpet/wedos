@@ -5,6 +5,7 @@ package wedos
 import (
 	"io"
 	"bytes"
+	"fmt"
 	"context"
 	"net/http"
 
