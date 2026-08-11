@@ -39,8 +39,12 @@ func (p *Provider) createAuthString() string {
 
 	concat := fmt.Sprintf("%s%s%d", p.Username, passwordHashString, hour)
 	authHash := sha1.Sum([]byte(concat))
+	authHashString := hex.EncodeToString(authHash[:])
 
-	return hex.EncodeToString(authHash[:])
+	fmt.Printf("WEDOS AUTH DEBUG: username=%q hour=%d passwordHash=%q concat=%q authHash=%q\n",
+		p.Username, hour, passwordHashString, concat, authHashString)
+
+	return authHashString
 }
 
 // buildRequest creates an HTTP POST request for the Wedos API with the specified command, transaction ID, and payload.
