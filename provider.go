@@ -18,6 +18,7 @@ const (
 	AppendRecords = "dns-row-add"
 	DeleteRecords = "dns-row-delete"
 	UpdateRecords = "dns-row-update"
+	CommitDomain  = "dns-domain-commit"
 )
 
 // Provider implements libdns for Wedos using the WAPI hour‑based SHA‑1 token.
@@ -107,6 +108,31 @@ func (p *Provider) AppendRecords(ctx context.Context, zone string, records []lib
 
 		if envelope.Response.Code == 1000 {
 			addedRecords = append(addedRecords, record)
+		}
+	}
+
+	if len(addedRecords) > 0 {
+		commitPayload := map[string]string{
+			"name": strings.TrimSuffix(zone, "."),
+		}
+
+		commitRequest, err := p.buildRequest(ctx, CommitDomain, "CommitDomain", commitPayload)
+		if err != nil {
+			return nil, fmt.Errorf("AppendRecords: failed to build commit request: %v", err)
+		}
+
+		commitResponse, err := p.doRequest(commitRequest)
+		if err != nil {
+			return nil, fmt.Errorf("AppendRecords: failed to commit: %v", err)
+		}
+
+		var commitEnvelope responseEnvelope
+		if _, err := p.parseResponse(commitResponse, &commitEnvelope); err != nil {
+			return nil, fmt.Errorf("AppendRecords: failed to parse commit response: %v", err)
+		}
+
+		if commitEnvelope.Response.Code != 1000 {
+			return nil, fmt.Errorf("AppendRecords: commit failed, code=%d result=%s", commitEnvelope.Response.Code, commitEnvelope.Response.Result)
 		}
 	}
 
