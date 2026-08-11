@@ -3,6 +3,8 @@
 package wedos
 
 import (
+	"io"
+	"bytes"
 	"context"
 	"net/http"
 
@@ -83,14 +85,22 @@ func (p *Provider) AppendRecords(ctx context.Context, zone string, records []lib
 
 		response, err := p.doRequest(request)
 		if err != nil {
+			fmt.Println("WEDOS DEBUG: doRequest error:", err)
 			return nil, err
 		}
+
+		bodyBytes, _ := io.ReadAll(response.Body)
+		fmt.Println("WEDOS DEBUG: raw response body:", string(bodyBytes))
+		response.Body = io.NopCloser(bytes.NewReader(bodyBytes))
 
 		var data dnsAppendResponse
 		envelope, err := p.parseResponse(response, &data)
 		if err != nil {
+			fmt.Println("WEDOS DEBUG: parseResponse error:", err)
 			return nil, err
 		}
+
+		fmt.Println("WEDOS DEBUG: envelope response code:", envelope.Response.Code, "result:", envelope.Response.Result)
 
 		if envelope.Response.Code == 1000 {
 			addedRecords = append(addedRecords, record)
