@@ -126,8 +126,8 @@ func (p *Provider) AppendRecords(ctx context.Context, zone string, records []lib
 			return nil, fmt.Errorf("AppendRecords: failed to commit: %v", err)
 		}
 
-		var commitEnvelope responseEnvelope
-		if _, err := p.parseResponse(commitResponse, &commitEnvelope); err != nil {
+		commitEnvelope, err := p.parseResponse(commitResponse, nil)
+		if err != nil {
 			return nil, fmt.Errorf("AppendRecords: failed to parse commit response: %v", err)
 		}
 
@@ -307,9 +307,13 @@ func (p *Provider) DeleteRecords(ctx context.Context, zone string, records []lib
 			return nil, err
 		}
 
-		var env responseEnvelope
-		if _, err := p.parseResponse(resp, &env); err != nil {
+		env, err := p.parseResponse(resp, nil)
+		if err != nil {
 			return nil, err
+		}
+
+		if env.Response.Code != OK {
+			return nil, fmt.Errorf("DeleteRecords: failed to delete record %q, code=%d result=%s", row.ID, env.Response.Code, env.Response.Result)
 		}
 
 		delete(wanted, key)
