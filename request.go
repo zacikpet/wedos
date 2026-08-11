@@ -51,12 +51,6 @@ func (p *Provider) buildRequest(ctx context.Context, command string, clTRID stri
 		return
 	}
 
-	req, err = http.NewRequestWithContext(ctx, http.MethodPost, BaseURL, nil)
-	if err != nil {
-		err = fmt.Errorf("buildRequest: failed to create req: %v", err)
-		return
-	}
-
 	requestBody := request{
 		User:    p.Username,
 		Auth:    p.createAuthString(),
@@ -65,9 +59,9 @@ func (p *Provider) buildRequest(ctx context.Context, command string, clTRID stri
 	}
 
 	if payload != nil {
-		rawPayload, err := json.Marshal(payload)
-		if err != nil {
-			return nil, fmt.Errorf("buildRequest: failed to marshal payload: %v", err)
+		rawPayload, marshalErr := json.Marshal(payload)
+		if marshalErr != nil {
+			return nil, fmt.Errorf("buildRequest: failed to marshal payload: %v", marshalErr)
 		}
 		requestBody.Data = rawPayload
 	}
@@ -81,18 +75,15 @@ func (p *Provider) buildRequest(ctx context.Context, command string, clTRID stri
 		return nil, fmt.Errorf("buildRequest: failed to marshal req: %v", err)
 	}
 
-	requestWrapped := map[string]string{
-		"request": string(requestJSON),
-	}
-
 	form := url.Values{}
-	for k, v := range requestWrapped {
-		form.Set(k, v)
+	form.Set("request", string(requestJSON))
+	encodedForm := form.Encode()
+
+	req, err = http.NewRequestWithContext(ctx, http.MethodPost, BaseURL, strings.NewReader(encodedForm))
+	if err != nil {
+		return nil, fmt.Errorf("buildRequest: failed to create req: %v", err)
 	}
 
-	requestEncoded := strings.NewReader(form.Encode())
-
-	req.Body = io.NopCloser(requestEncoded)
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
 	return req, nil
