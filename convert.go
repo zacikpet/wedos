@@ -48,6 +48,12 @@ func normalizeNameToAPI(apiName string) (string, error) {
 	return apiName, nil
 }
 
+// ttlToWedosSeconds converts a libdns TTL (time.Duration, stored in nanoseconds)
+// into the plain integer number of seconds that the WEDOS API expects.
+func ttlToWedosSeconds(ttl time.Duration) string {
+	return strconv.Itoa(int(ttl.Seconds()))
+}
+
 // toLibDNSRecord converts a rowItem (response from WEDOS API) into a libdns.Record
 func toLibDNSRecord(row rowItem) (libdns.Record, error) {
 	var record libdns.Record
@@ -158,7 +164,7 @@ func toWedosDNSRecord(record libdns.Record, zone string) (map[string]string, err
 		return map[string]string{
 			"domain": zone,
 			"name":   name,
-			"ttl":    strconv.Itoa(int(r.TTL)),
+			"ttl":    ttlToWedosSeconds(r.TTL),
 			"type":   recordType,
 			"rdata":  r.IP.String(),
 		}, nil
@@ -167,7 +173,7 @@ func toWedosDNSRecord(record libdns.Record, zone string) (map[string]string, err
 		return map[string]string{
 			"domain": zone,
 			"name":   name,
-			"ttl":    strconv.Itoa(int(r.TTL)),
+			"ttl":    ttlToWedosSeconds(r.TTL),
 			"type":   CNAMERecord,
 			"rdata":  r.Target,
 		}, nil
@@ -175,7 +181,7 @@ func toWedosDNSRecord(record libdns.Record, zone string) (map[string]string, err
 		p := map[string]string{
 			"domain": zone,
 			"name":   name,
-			"ttl":    strconv.Itoa(int(r.TTL)),
+			"ttl":    ttlToWedosSeconds(r.TTL),
 			"type":   TXTRecord,
 			"rdata":  r.Text,
 		}
@@ -184,7 +190,7 @@ func toWedosDNSRecord(record libdns.Record, zone string) (map[string]string, err
 		return map[string]string{
 			"domain": zone,
 			"name":   name,
-			"ttl":    strconv.Itoa(int(r.TTL)),
+			"ttl":    ttlToWedosSeconds(r.TTL),
 			"type":   MXRecord,
 			"rdata":  fmt.Sprintf("%d %s", r.Preference, r.Target),
 		}, nil
@@ -192,7 +198,7 @@ func toWedosDNSRecord(record libdns.Record, zone string) (map[string]string, err
 		return map[string]string{
 			"domain": zone,
 			"name":   name,
-			"ttl":    strconv.Itoa(int(r.TTL)),
+			"ttl":    ttlToWedosSeconds(r.TTL),
 			"type":   NSRecord,
 			"rdata":  r.Target,
 		}, nil
@@ -200,7 +206,7 @@ func toWedosDNSRecord(record libdns.Record, zone string) (map[string]string, err
 		return map[string]string{
 			"domain": zone,
 			"name":   name,
-			"ttl":    strconv.Itoa(int(r.TTL)),
+			"ttl":    ttlToWedosSeconds(r.TTL),
 			"type":   SRVRecord,
 			"rdata":  fmt.Sprintf("%d %d %d %s", r.Priority, r.Weight, r.Port, r.Target),
 		}, nil
@@ -208,7 +214,7 @@ func toWedosDNSRecord(record libdns.Record, zone string) (map[string]string, err
 		return map[string]string{
 			"domain": zone,
 			"name":   name,
-			"ttl":    strconv.Itoa(int(r.TTL)),
+			"ttl":    ttlToWedosSeconds(r.TTL),
 			"type":   r.Type,
 			"rdata":  r.Data,
 		}, nil
@@ -217,7 +223,7 @@ func toWedosDNSRecord(record libdns.Record, zone string) (map[string]string, err
 		return map[string]string{
 			"domain": zone,
 			"name":   name,
-			"ttl":    strconv.Itoa(int(rr.TTL)),
+			"ttl":    ttlToWedosSeconds(rr.TTL),
 			"type":   rr.Type,
 			"rdata":  rr.Data,
 		}, nil
